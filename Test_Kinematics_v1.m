@@ -32,7 +32,7 @@ if (D3 > L5)
     disp('Object is out of range.')
 else
     phi5 = acosd((D2^2 + D3^2 - L4^2)/(2*D2*D3));
-    phi6 = acosd((D3^2)/(2*L2*D3));
+    phi6 = acosd(((D3^2) + (L2^2) - (L3^2))/(2*L2*D3));
     phi7 = (180 - (2*phi6));
     J2_theta = 180 - phi3 - phi5 - phi6 
     %revolution of joint 2 from z-axis on XZ plane
