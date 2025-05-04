@@ -1,13 +1,12 @@
 import cv2
 import numpy as np
 
-cap1 = cv2.VideoCapture(3)  # First webcam
+cap1 = cv2.VideoCapture(2)  # First webcam
 cap2 = cv2.VideoCapture(1)  # Second webcam
 
 # Define lower and upper bounds for red in HSV
 lower_red1 = np.array([0, 120, 70])
 upper_red1 = np.array([10, 255, 255])
-
 lower_red2 = np.array([170, 120, 70])
 upper_red2 = np.array([180, 255, 255])
 
@@ -19,24 +18,44 @@ while True:
         print("Failed to grab frame from one of the cameras.")
         break
 
-    for idx, frame in enumerate([frame1, frame2], start=1):
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    center1 = None
+    center2 = None
 
-        mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
-        mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
-        mask = mask1 | mask2
+    # Process camera 1
+    hsv1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2HSV)
+    mask1_1 = cv2.inRange(hsv1, lower_red1, upper_red1)
+    mask1_2 = cv2.inRange(hsv1, lower_red2, upper_red2)
+    mask1 = mask1_1 | mask1_2
 
-        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours1, _ = cv2.findContours(mask1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    if contours1:
+        largest1 = max(contours1, key=cv2.contourArea)
+        if cv2.contourArea(largest1) > 500:
+            (x1, y1), radius1 = cv2.minEnclosingCircle(largest1)
+            center1 = (int(x1), int(y1))
+            cv2.circle(frame1, center1, int(radius1), (0, 255, 0), 2)
 
-        if contours:
-            largest = max(contours, key=cv2.contourArea)
-            if cv2.contourArea(largest) > 500:
-                (x, y), radius = cv2.minEnclosingCircle(largest)
-                center = (int(x), int(y))
-                cv2.circle(frame, center, int(radius), (0, 255, 0), 2)
-                print(f"Camera {idx} - Ball center at: {center}")
+    # Process camera 2
+    hsv2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2HSV)
+    mask2_1 = cv2.inRange(hsv2, lower_red1, upper_red1)
+    mask2_2 = cv2.inRange(hsv2, lower_red2, upper_red2)
+    mask2 = mask2_1 | mask2_2
 
-        cv2.imshow(f'Red Ball Tracker - Camera {idx}', frame)
+    contours2, _ = cv2.findContours(mask2, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    if contours2:
+        largest2 = max(contours2, key=cv2.contourArea)
+        if cv2.contourArea(largest2) > 500:
+            (x2, y2), radius2 = cv2.minEnclosingCircle(largest2)
+            center2 = (int(x2), int(y2))
+            cv2.circle(frame2, center2, int(radius2), (0, 255, 0), 2)
+
+    if center1 and center2:
+        # Print coordinates in desired format: (x, y, z)
+        print(f"(x, y, z) = ({center1[0]}, {center1[1]}, {center2[1]})")
+
+    # Show both frames
+    cv2.imshow('Red Ball Tracker - Camera 1', frame1)
+    cv2.imshow('Red Ball Tracker - Camera 2', frame2)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
@@ -45,4 +64,3 @@ while True:
 cap1.release()
 cap2.release()
 cv2.destroyAllWindows()
-
